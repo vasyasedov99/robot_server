@@ -1,3 +1,4 @@
+
 const net = require('net');
 const TCPClientStates = {
     UNKNOWN: "UNKNOWN",
@@ -5,12 +6,6 @@ const TCPClientStates = {
     READY: "READY",
     DISCONNECTED: "DISCONNECTED"
 }
-
-var server = net.createServer(function(socket) {
-	socket.write('Echo server\r\n');
-	socket.pipe(socket);
-});
-server.listen(1337);
 
 class TCPClient {
     state = TCPClientStates.UNKNOWN;
@@ -34,6 +29,7 @@ class TCPClient {
     init() {
         socket.on('data', handle_message_raw);
         socket.on('end', socket.end);
+        this.write('auth');
     }
 
     handle_message_raw(message) {
@@ -50,7 +46,26 @@ class TCPClient {
     }
 
     handle_message(message) {
-        if (state == )
+        let command = message.split(" ");
+        if (this.state == TCPClientStates.AUTH) {
+            if (length(command) < 3) {
+                this.socket.write("auth");
+                return;
+            }
+            if (command[0] != 'auth') {
+                this.write('auth');
+                return;
+            }
+            this.approve(command[1]);
+            this.socket.write("ok");
+        } else {
+            this.handler(message, this);
+        }
+    }
+
+    approve(username) {
+        this.username = username;
+        state = TCPClientStates.READY;
     }
 
     write(message) {
@@ -67,6 +82,7 @@ class TCPClient {
         } else {
             try {
                 this.socket.destroy();
+                this.state = TCPClientStates.DISCONNECTED;
             } catch(e) {
                 return e;
             }
@@ -85,22 +101,53 @@ class TCPClient {
 }
 
 class TCPServer {
-    
-    server = net.createServer(function(socket) {
-        socket.write('auth');
-        socket.pipe(socket);
-    });
+    /** @type {net.Server} */
+    server = undefined;
     clients = [];
+    port = 0;
+    _isrunning = false;
 
     constructor(port) {
-        
+        this.port = port;
     }
 
     run() {
-
+        if (this.isRunning) {
+            return "enabled";
+        }
+        try {
+            this.server = net.createServer(function(socket) {
+                let client = new TCPClient(socket);
+                
+            });
+            this.server.listen(this.port);
+            this._isrunning = true;
+        } catch(e) {
+            return e;
+        }
+        return "ok";
     }
 
     stop() {
+        if (!this.isRunning()) {
+            return "disabled";
+        }
+        this.clients.forEach(element => {
+            element.disconnect();
+        });
+        this.server.destroy();
+        this._isrunning = false;
 
+        return "ok";
     }
+
+    isRunning() {
+        return this._isrunning;
+    }
+}
+
+exports = {
+    "ClientStates": TCPClientStates,
+    "Cleint": TCPClient,
+    "Server": TCPServer
 }

@@ -21,6 +21,9 @@ class HTTPServer {
     }
 
     run() {
+        if (this.isRunning) {
+            return "enabled";
+        }
         try {
             this.server = http.createServer((req, res) => {
                 let urlObj = new URL("http://root" + req.url);
