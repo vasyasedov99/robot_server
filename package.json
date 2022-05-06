@@ -1,0 +1,11 @@
+{
+  "name": "testserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./source/index.js"
+  },
+  "author": "Shanin",
+  "license": "ISC"
+}
