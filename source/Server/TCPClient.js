@@ -30,9 +30,7 @@ class TCPClient {
             this.socket.connect(port, socket, function() {
                 state = TCPClientStates.AUTH;
             })
-            this.socket.on('data', function(data) {
-
-            })
+            this.socket.on('data', handle_message_raw)
         } catch(e) {
             return e;
         }
@@ -68,7 +66,7 @@ class TCPClient {
     handle_message(message) {
         if (state == TCPClientStates.AUTH) {
             if (message == 'auth') {
-                this.socket.write("auth");
+                this.write(`auth ${this.user} ${this.pass}`);
                 return;
             }
             if (message == 'ok') {
@@ -87,27 +85,10 @@ class TCPClient {
     }
 
     write(message) {
-        this.socket.write(message);
+        this.socket.write(message + "\n");
         return "ok";
     }
 }
 
-var client = new net.Socket();
-client.connect(1337, '127.0.0.1', function() {
-	console.log('Connected');
-	client.write('Hello, server! Love, Client.');
-});
-
-client.on('data', function(data) {
-	console.log('Received: ' + data);
-	client.destroy(); // kill client after server's response
-});
-
-client.on('close', function() {
-	console.log('Connection closed');
-});
-
-exports = {
-    "Client": TCPClient,
-    "ClientStates": TCPClientStates
-}
+exports.ClientStates = TCPClientStates;
+exports.Client = TCPClient;

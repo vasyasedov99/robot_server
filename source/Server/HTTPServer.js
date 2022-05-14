@@ -13,7 +13,7 @@ class HTTPServer {
     **/
     server = undefined; 
     _isrunning = false;
-    handler = () => {return "empty"};
+    handler = () => {return {text: "empty", code: 200}};
 
     constructor(hostname="", port=0) {
         this.hostname = hostname;
@@ -21,16 +21,26 @@ class HTTPServer {
     }
 
     run() {
-        if (this.isRunning) {
+        if (this.isRunning()) {
             return "enabled";
         }
         try {
             this.server = http.createServer((req, res) => {
                 let urlObj = new URL("http://root" + req.url);
 
-                res.statusCode = 200;
                 res.setHeader('Content-Type', 'text/plain');
-                res.end(this.handler());
+
+                let params = {};
+                let keys = urlObj.searchParams.keys();
+                let n = keys.next();
+                while (!n.done) {
+                    params[n.value] = urlObj.searchParams.get(n.value);
+                    n = keys.next();
+                }
+
+                let answer = this.handler(urlObj.pathname.split("/").filter(function(s){if (s == "") return false; return true}), urlObj.searchParams, params);
+                res.statusCode = answer.code == undefined ? 200 : answer.code;
+                res.end(answer.text);
             });
             this.server.listen(this.port, this.hostname, () => {
                 this._isrunning = true;

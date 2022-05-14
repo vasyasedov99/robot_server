@@ -49,7 +49,7 @@ class TCPClient {
         let command = message.split(" ");
         if (this.state == TCPClientStates.AUTH) {
             if (length(command) < 3) {
-                this.socket.write("auth");
+                this.write("auth");
                 return;
             }
             if (command[0] != 'auth') {
@@ -57,7 +57,7 @@ class TCPClient {
                 return;
             }
             this.approve(command[1]);
-            this.socket.write("ok");
+            this.write("ok");
         } else {
             this.handler(message, this);
         }
@@ -69,10 +69,7 @@ class TCPClient {
     }
 
     write(message) {
-        if (!this.is_connected()) {
-            return "not active";
-        }
-        this.socket.write(message);
+        this.socket.write(message + "\n");
         return "ok";
     }
 
@@ -112,7 +109,7 @@ class TCPServer {
     }
 
     run() {
-        if (this.isRunning) {
+        if (this.isRunning()) {
             return "enabled";
         }
         try {
@@ -146,8 +143,6 @@ class TCPServer {
     }
 }
 
-exports = {
-    "ClientStates": TCPClientStates,
-    "Cleint": TCPClient,
-    "Server": TCPServer
-}
+exports.Server = TCPServer;
+exports.Cleint = TCPClient;
+exports.ClientStates = TCPClientStates;
